@@ -157,7 +157,7 @@ A log file which i have tested in my machine below are the few logs:
 	
 =========================================================================
 A A README file with instructions how to run.
-
+	we will find the output in /tmp/ folder with this log.txt file name
 	sh managing-disk-space.sh 1 [here 1 which I have used in the script is in days from 1-100]
 
 ################################
