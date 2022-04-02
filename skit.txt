@@ -1,0 +1,165 @@
+############################
+Task Begin To Docker
+############################
+Note: I have performed these tasks in gcp
+==========================
+A Dockerfile:
+------------------
+
+FROM golang:1.18 
+RUN mkdir /app
+ADD . /app
+WORKDIR /app
+## Add this go mod download command to pull in any dependencies
+RUN go mod download
+## Our project will now successfully build with the necessary go libraries included.
+RUN go build -o main .
+## Our start command which kicks off
+## our newly created binary executable
+CMD ["/app/main"]
+
+###########################################
+
+A README file with instructions on how to build and run the image:
+
+
+1> First I identified that we need to build the image which has written in go
+2> Prerequisties is we need to have installed Go,Docker in our vitrual machine
+3> We need to do some smoke test with the main.go[like go run main.go] to check whether the output is successfull or not, if not
+   we need to debug it until we get success.
+   After this we need to run the below ones
+     go mod init
+     go mod init example.com/m
+     go mod tidy
+
+4> we need to write a Dockerfile
+
+vim Dockerfile
+
+	FROM golang:1.18 
+	RUN mkdir /app
+	ADD . /app
+	WORKDIR /app
+	## Add this go mod download command to pull in any dependencies
+	RUN go mod download
+	## Our project will now successfully build with the necessary go libraries included.
+	RUN go build -o main .
+	## Our start command which kicks off
+	## our newly created binary executable
+	CMD ["/app/main"]
+
+5> Now we will build the image as shown below
+
+	docker build -t goapp .
+
+6> we need to spin up the container with the generated image with the port mapping as shown below
+
+	docker run -d -p 8080:8080 -it goapp
+
+7> check whether the container is running or not with the below command
+
+	docker container ls
+
+8> Finally I have tested in the gcloud Preview on Port 8080 and I have observed the below output
+
+Example of output: hello, my hostname is bd517825b7d9
+
+
+#######################################
+Task End To The Docker
+#######################################
+
+============================================================================================================================================================
+############################
+Task Begin to k8s
+############################
+
+A file containing relevant kubernetes object: 
+
+	These things we will getting with the below command once everything was deployed 
+
+	kubectl get all {which will show us over all things}
+
+
+A README file with instructions to run application on a kubernetes cluster:
+
+	Now we have the dockerized images with us, we need to create k8s cluster for that we need to get configure the docker with gauth as shown below
+	
+		gcloud auth configure-docker
+	
+	Now we need to tag the images with the image what we have build and then we will push to google container registry[gcr.io] as shown below
+		
+		docker tag goapp gcr.io/playground-s-11-70de3c31/goapp:v1 {replace your projectid]
+		docker images {to verify the tag has been updated or not]
+		docker push gcr.io/playground-s-11-70de3c31/goapp:v1 [replace your projectid]
+	
+	Creating the Kubernetes Engine cluster.
+	
+	1. In the Cloud Shell, we need to enter the following commands:
+	
+		gcloud config set compute/zone us-central1-a
+	
+		gcloud container clusters create gke-1 --num-nodes=2 [observe in the Kubernetes Engine GKE our cluster gke-1 will be spinning up.
+	
+	2. Now we need to enter the following commands to deploy the app, substituting your project ID where indicated:
+		In the Cloud Shell, enter the following commands:
+		
+			kubectl create deployment apptest --image=gcr.io/playground-s-11-e577690b/goapp:v1 [replace your projectid]
+	
+	3. Expose the deployed workload.
+		In the Cloud Shell, enter the following commands:
+			
+			kubectl expose deployment apptest --type=LoadBalancer --name=apptest-service --port=31000 --target-port=8080
+	
+			kubectl get services apptest-service: the output of this as shown below
+			
+			NAME              TYPE           CLUSTER-IP    EXTERNAL-IP     PORT(S)           AGE
+			apptest-service   LoadBalancer   10.72.4.116   34.67.106.165   31000:30463/TCP   14m
+	
+	4. At last we will see the under GKE-->workloads--->select our cluster--->the bottom you will the LoadBalancer with the external once if we click on it then the output will be displayed
+	as shown below.
+	
+		output: hello, my hostname is apptest-d564bdbdf-ljf9q
+	
+	5. In order to see the objects we run in the cloud shell as shown below:
+		
+			kubectl get all
+
+###########################################
+Task End To k8s
+###########################################
+
+================================================================================================================================================
+####################################
+Task Begin to Bash
+####################################
+
+A bash file
+-------------
+	#!/bin/bash
+	DIR="/home/anils/Downloads/" [specify your own path in which you are testing] in the assigment you have given /data/audios/
+	TYPE='*.wav'
+	OUT="/tmp/list.txt"
+	LOG="/tmp/log.txt"
+	echo "" > "$LOG"
+	find "$DIR" -mtime +1 -mtime -100 -type f -name "${TYPE}" -print0 | xargs -I {} -0 ls "{}"> "${OUT}"
+	while IFS= read -r file
+	do
+		echo "${file}" "$(stat -c "%x" "${file}")" "$(date --iso-8601=seconds)" >>"$LOG"
+		rm -f "${file}"
+	done <"${OUT}"
+	rm "${OUT}"
+==========================================================================
+A log file which i have tested in my machine below are the few logs:
+--------------------------------------------------------------------
+	/home/anils/Downloads/file_example_WAV_1MG.wav 2022-03-29 19:10:43.112919504 +0530 2022-04-02T15:44:41+05:30
+	/home/anils/Downloads/file_example_WAV_5MG.wav 2022-03-29 19:16:27.133306805 +0530 2022-04-02T15:44:41+05:30
+	
+=========================================================================
+A A README file with instructions how to run.
+
+	sh managing-disk-space.sh 1 [here 1 which I have used in the script is in days from 1-100]
+
+################################
+Task End to Bash
+################################
